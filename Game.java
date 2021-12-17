@@ -1,168 +1,166 @@
-import javax.swing.JFrame;
-import java.util.ArrayList;
 import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-public class Game extends JFrame implements Runnable{
- BufferedImage img, img1;
- private static final long serialVersionUID = 1L;
- public int mapWidth = 15;
- public int mapHeight = 15;
- private Thread thread;
- private boolean running;
- private BufferedImage image;
- public int[] pixels;
- public ArrayList<Texture> textures;
- public Camera camera;
- public boolean firestate, reloadstate;
- public double blasterammolevel = 175.0;
- public Screen screen;
- //map layout
- //5 is enemy location
- public static int[][] map =
-  {
-   {1,1,1,1,1,1,1,1,2,2,2,2,2,2,2},
-   {1,0,0,0,0,0,0,0,2,0,0,0,0,0,2},
-   {1,0,3,3,3,3,3,0,0,0,0,0,5,0,2},
-   {1,0,3,0,0,0,3,0,2,0,0,0,0,0,2},
-   {1,0,3,0,0,0,3,0,2,2,2,0,2,2,2},
-   {1,0,3,0,0,0,3,0,2,0,0,0,0,0,2},
-   {1,0,3,3,0,3,3,0,2,0,0,0,0,0,2},
-   {1,0,0,0,0,0,0,0,2,0,0,0,0,0,2},
-   {1,1,1,1,1,1,1,1,4,4,4,0,4,4,4},
-   {1,0,0,0,0,0,1,4,0,0,0,0,0,0,4},
-   {1,0,0,0,0,0,1,4,0,0,0,0,0,0,4},
-   {1,0,0,0,0,0,1,4,0,3,3,3,3,0,4},
-   {1,0,0,0,0,0,1,4,0,3,3,3,3,0,4},
-   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,4},
-   {1,1,1,1,1,1,1,4,4,4,4,4,4,4,4}
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+
+public class Game extends JFrame implements Runnable {
+  BufferedImage img, img1;
+  private static final long serialVersionUID = 1L;
+  public int mapWidth = 15;
+  public int mapHeight = 15;
+  private Thread thread;
+  private boolean running;
+  private BufferedImage image;
+  public int[] pixels;
+  public ArrayList<Texture> textures;
+  public Camera camera;
+  public boolean firestate, reloadstate;
+  public double blasterammolevel = 175.0;
+  public Screen screen;
+  // map layout
+  // 5 is enemy location
+  public static int[][] map = {
+      { 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 },
+      { 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2 },
+      { 1, 0, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 5, 0, 2 },
+      { 1, 0, 3, 0, 0, 0, 3, 0, 2, 0, 0, 0, 0, 0, 2 },
+      { 1, 0, 3, 0, 0, 0, 3, 0, 2, 2, 2, 0, 2, 2, 2 },
+      { 1, 0, 3, 0, 0, 0, 3, 0, 2, 0, 0, 0, 0, 0, 2 },
+      { 1, 0, 3, 3, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 2 },
+      { 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2 },
+      { 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 0, 4, 4, 4 },
+      { 1, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 4 },
+      { 1, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 4 },
+      { 1, 0, 0, 0, 0, 0, 1, 4, 0, 3, 3, 3, 3, 0, 4 },
+      { 1, 0, 0, 0, 0, 0, 1, 4, 0, 3, 3, 3, 3, 0, 4 },
+      { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4 },
+      { 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4 }
   };
- 
- //make sure all resolution values are the same
- public Game() {
-  thread = new Thread(this);
-  image = new BufferedImage(1280, 720, BufferedImage.TYPE_INT_ARGB);
-  pixels = ((DataBufferInt)image.getRaster().getDataBuffer()).getData();
-  textures = new ArrayList<Texture>();
-  textures.add(Texture.metal);
-  textures.add(Texture.window);
-  textures.add(Texture.console);
-  textures.add(Texture.vent);
-  textures.add(Texture.alienGrunt);
-  camera = new Camera(4.5, 4.5, 1, 0, 0, -.90);
-  screen = new Screen(map, mapWidth, mapHeight, textures, 1280, 720);
-  addKeyListener(camera);
-  setSize(1280, 720);
-  setResizable(false);
-  setTitle("Java 3D Engine");
-  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-  setBackground(Color.black);
-  setLocationRelativeTo(null);
-  setVisible(true);
-  //loads blaster sprites
-  try {
+
+  // make sure all resolution values are the same
+  public Game() {
+    thread = new Thread(this);
+    image = new BufferedImage(1280, 720, BufferedImage.TYPE_INT_ARGB);
+    pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+    textures = new ArrayList<Texture>();
+    textures.add(Texture.metal);
+    textures.add(Texture.window);
+    textures.add(Texture.console);
+    textures.add(Texture.vent);
+    textures.add(Texture.alienGrunt);
+    camera = new Camera(4.5, 4.5, 1, 0, 0, -.90);
+    screen = new Screen(map, mapWidth, mapHeight, textures, 1280, 720);
+    addKeyListener(camera);
+    setSize(1280, 720);
+    setResizable(false);
+    setTitle("Java 3D Engine");
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setBackground(Color.black);
+    setLocationRelativeTo(null);
+    setVisible(true);
+    // loads blaster sprites
+    try {
       img = ImageIO.read(new File("textures/gun-basic.png"));
       img1 = ImageIO.read(new File("textures/gun-shoot.png"));
+    } catch (IOException e) {
     }
-    catch (IOException e) {}
-  
-  start();
- }
- 
- private synchronized void start() {
-  running = true;
-  thread.start();
- }
- 
- public synchronized void stop() {
-  running = false;
-  try {
-   thread.join();
-  } 
-  catch(InterruptedException e) {
-   e.printStackTrace();
-  }
- }
 
-//main renderer
- public void render() {
-  firestate = camera.blaster(firestate);
-  reloadstate = camera.reload(reloadstate);
-  BufferStrategy bs = getBufferStrategy();
-  if(bs == null) {
-   createBufferStrategy(3);
-   return;
+    start();
   }
-  Graphics g = bs.getDrawGraphics();
-  g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
-  //gun no fire render
-  if(firestate == false) {
-    g.drawImage(img, 478, 417, 325, 300, null);
+
+  private synchronized void start() {
+    running = true;
+    thread.start();
   }
-  //gun fire and ammo deleption render -- slowed down rate of fire and alternating fire animation
-  if(firestate == true) {
-    if(blasterammolevel > 0 && blasterammolevel%2 <= 1 && blasterammolevel%2 >= 0.5) {
-      g.drawImage(img1, 478, 417, 325, 300, null);
-      blasterammolevel -= 0.1;
+
+  public synchronized void stop() {
+    running = false;
+    try {
+      thread.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-    else if(blasterammolevel > 0) {
+  }
+
+  // main renderer
+  public void render() {
+    firestate = camera.blaster(firestate);
+    reloadstate = camera.reload(reloadstate);
+    BufferStrategy bs = getBufferStrategy();
+    if (bs == null) {
+      createBufferStrategy(3);
+      return;
+    }
+    Graphics g = bs.getDrawGraphics();
+    g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
+    // gun no fire render
+    if (firestate == false) {
       g.drawImage(img, 478, 417, 325, 300, null);
-      blasterammolevel -= 0.1;
     }
-    else {
-      g.drawImage(img, 478, 417, 325, 300, null);
+    // gun fire and ammo deleption render -- slowed down rate of fire and
+    // alternating fire animation
+    if (firestate == true) {
+      if (blasterammolevel > 0 && blasterammolevel % 2 <= 1 && blasterammolevel % 2 >= 0.5) {
+        g.drawImage(img1, 478, 417, 325, 300, null);
+        blasterammolevel -= 0.1;
+      } else if (blasterammolevel > 0) {
+        g.drawImage(img, 478, 417, 325, 300, null);
+        blasterammolevel -= 0.1;
+      } else {
+        g.drawImage(img, 478, 417, 325, 300, null);
+      }
     }
-  }
-  //reload button
-  if(reloadstate == true) {
-    blasterammolevel = 175;
-  }
-  //ammo render
-  String numOfammo = String.valueOf((int)blasterammolevel);
-  g.setColor(Color.BLUE);
-  g.drawRect(1039, 624, 176, 31);
-  g.setColor(Color.GREEN);
-  g.fillRect(1040, 625, 0 -(-(int)blasterammolevel), 30);
-  if(blasterammolevel > 0) {
+    // reload button
+    if (reloadstate == true) {
+      blasterammolevel = 175;
+    }
+    // ammo render
+    String numOfammo = String.valueOf((int) blasterammolevel);
     g.setColor(Color.BLUE);
-    g.drawString("BLASTER AMMO:", 1050, 645);
-    g.drawString(numOfammo, 1150, 645);
+    g.drawRect(1039, 624, 176, 31);
+    g.setColor(Color.GREEN);
+    g.fillRect(1040, 625, 0 - (-(int) blasterammolevel), 30);
+    if (blasterammolevel > 0) {
+      g.setColor(Color.BLUE);
+      g.drawString("BLASTER AMMO:", 1050, 645);
+      g.drawString(numOfammo, 1150, 645);
+    } else {
+      g.setColor(Color.RED);
+      g.drawString("RELOAD - PRESS R", 1070, 645);
+    }
+    bs.show();
   }
-  else {
-    g.setColor(Color.RED);
-    g.drawString("RELOAD - PRESS R", 1070, 645);
-  }
-  bs.show();
- }
-//run method
- public void run() {
-  long lastTime = System.nanoTime();
-  //60fps
-  final double ns = 1000000000.0 / 60.0; //updates 60 times per second
-  double delta = 0;
-  requestFocus();
-  while(running) {
-   long now = System.nanoTime();
-   delta = delta + ((now-lastTime) / ns);
-   lastTime = now;
-   while (delta >= 1)
-   {
-    //handles all of the logic restricted time
-    screen.update(camera, pixels);
-    camera.update(map);
-    delta--;
-   }
-   render();//displays to the screen unrestricted time
-  }
- }
 
- //main method
- public static void main(String [] args) {
+  // run method
+  public void run() {
+    long lastTime = System.nanoTime();
+    // 60fps
+    final double ns = 1000000000.0 / 60.0; // updates 60 times per second
+    double delta = 0;
+    requestFocus();
+    while (running) {
+      long now = System.nanoTime();
+      delta = delta + ((now - lastTime) / ns);
+      lastTime = now;
+      while (delta >= 1) {
+        // handles all of the logic restricted time
+        screen.update(camera, pixels);
+        camera.update(map);
+        delta--;
+      }
+      render();// displays to the screen unrestricted time
+    }
+  }
+
+  // main method
+  public static void main(String[] args) {
     Game game = new Game();
-}
+  }
 }
